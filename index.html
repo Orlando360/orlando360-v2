@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Orlando Iguarán 360™ · Suite de Diagnóstico IA</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --negro: #0A0A0A;
+  --negro2: #111111;
+  --negro3: #181818;
+  --negro4: #1E1E1E;
+  --dorado: #F5C518;
+  --dorado2: #C9A227;
+  --dorado3: #FFD84D;
+  --texto: #E0E0E0;
+  --texto2: #777;
+  --texto3: #444;
+  --borde: rgba(245,197,24,0.18);
+  --borde2: rgba(255,255,255,0.06);
+  --verde: #3DBA7A;
+  --naranja: #F07C3A;
+  --rojo: #E84545;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--negro);
+  color:var(--texto);
+  font-family:'DM Sans',sans-serif;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background:
+    radial-gradient(ellipse 80% 40% at 50% -10%,rgba(245,197,24,0.05) 0%,transparent 60%),
+    radial-gradient(ellipse 30% 50% at 95% 50%,rgba(245,197,24,0.03) 0%,transparent 60%);
+  pointer-events:none;z-index:0;
+}
+
+/* ══ HEADER ══ */
+header{
+  position:sticky;top:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 48px;height:64px;
+  background:rgba(10,10,10,0.95);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--borde2);
+}
+.logo{display:flex;align-items:center;gap:12px;}
+.logo-mark{
+  width:34px;height:34px;
+  background:var(--dorado);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Playfair Display',serif;
+  font-weight:900;font-size:16px;color:var(--negro);
+}
+.logo-texto{line-height:1.15;}
+.logo-nombre{font-family:'Playfair Display',serif;font-size:14px;font-weight:700;color:#fff;}
+.logo-sub{font-size:9px;color:var(--dorado);letter-spacing:.2em;text-transform:uppercase;font-weight:600;}
+.nav{display:flex;gap:4px;}
+.nav-btn{
+  background:none;border:none;
+  padding:7px 16px;font-size:11px;
+  font-family:'DM Sans',sans-serif;
+  color:var(--texto2);letter-spacing:.1em;
+  text-transform:uppercase;cursor:pointer;
+  border-bottom:2px solid transparent;
+  transition:all .2s;
+}
+.nav-btn:hover,.nav-btn.activo{color:var(--dorado);border-bottom-color:var(--dorado);}
+
+/* ══ VISTAS ══ */
+.vista{display:none;position:relative;z-index:1;}
+.vista.activa{display:block;}
+
+/* ══ VISTA AUDITORÍA ══ */
+.auditoria-wrap{
+  max-width:780px;margin:0 auto;
+  padding:72px 24px 80px;
+  text-align:center;
+}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:10px;letter-spacing:.25em;text-transform:uppercase;
+  color:var(--dorado);font-weight:600;margin-bottom:24px;
+}
+.eyebrow::before,.eyebrow::after{content:'';display:block;width:24px;height:1px;background:var(--dorado);opacity:.4;}
+.titulo-hero{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(40px,5.5vw,68px);
+  font-weight:900;line-height:1.02;
+  color:#fff;margin-bottom:16px;
+  letter-spacing:-.02em;
+}
+.titulo-hero em{color:var(--dorado);font-style:italic;}
+.subtitulo-hero{
+  font-size:15px;color:var(--texto2);
+  line-height:1.75;max-width:520px;
+  margin:0 auto 56px;
+}
+
+/* ══ TARJETA INPUT ══ */
+.tarjeta-input{
+  background:var(--negro2);
+  border:1px solid var(--borde);
+  padding:36px 40px 32px;
+  margin-bottom:24px;
+  text-align:left;
+  position:relative;
+  overflow:hidden;
+}
+.tarjeta-input::before{
+  content:'';
+  position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--dorado2),var(--dorado3),var(--dorado2));
+}
+.etiqueta{
+  font-size:10px;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--dorado);font-weight:700;margin-bottom:12px;display:block;
+}
+.fila-input{display:flex;gap:10px;}
+.url-input{
+  flex:1;background:var(--negro3);
+  border:1px solid var(--borde2);
+  padding:15px 18px;color:#fff;
+  font-family:'DM Mono',monospace;font-size:14px;
+  outline:none;transition:border-color .2s;
+}
+.url-input:focus{border-color:var(--dorado);}
+.url-input::placeholder{color:var(--texto3);}
+.btn-analizar{
+  background:var(--dorado);color:var(--negro);
+  border:none;padding:15px 30px;
+  font-family:'DM Sans',sans-serif;
+  font-size:12px;font-weight:800;
+  letter-spacing:.12em;text-transform:uppercase;
+  cursor:pointer;transition:all .2s;white-space:nowrap;
+}
+.btn-analizar:hover{background:var(--dorado3);transform:translateY(-1px);}
+.btn-analizar:disabled{opacity:.35;cursor:not-allowed;transform:none;}
+
+/* ══ AGENTES GRID ══ */
+.agentes-grid{
+  display:grid;grid-template-columns:repeat(5,1fr);
+  gap:8px;margin-top:24px;
+}
+.agente-card{
+  background:var(--negro3);
+  border:1px solid var(--borde2);
+  padding:14px 8px 12px;
+  text-align:center;
+  transition:all .35s;
+  cursor:default;
+}
+.agente-icono{font-size:20px;margin-bottom:6px;display:block;}
+.agente-nombre{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--texto2);line-height:1.3;}
+.agente-estado{font-size:8px;color:var(--texto3);margin-top:4px;font-family:'DM Mono',monospace;}
+.agente-card.corriendo{
+  border-color:var(--dorado);
+  background:rgba(245,197,24,0.05);
+}
+.agente-card.corriendo .agente-nombre{color:var(--dorado);}
+.agente-card.corriendo .agente-estado{color:var(--dorado);opacity:.7;}
+.agente-card.listo{
+  border-color:var(--verde);
+  background:rgba(61,186,122,0.05);
+}
+.agente-card.listo .agente-nombre{color:var(--verde);}
+.agente-card.listo .agente-estado{color:var(--verde);}
+
+/* ══ PROGRESO ══ */
+.barra-progreso-wrap{
+  display:none;margin-top:28px;
+  background:var(--negro2);border:1px solid var(--borde2);
+  padding:24px 28px;
+}
+.barra-progreso-wrap.visible{display:block;}
+.progreso-header{
+  display:flex;justify-content:space-between;
+  align-items:center;margin-bottom:12px;
+}
+.progreso-label{font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--dorado);}
+.progreso-msg{font-size:11px;color:var(--texto2);font-family:'DM Mono',monospace;}
+.barra-track{height:3px;background:var(--negro4);overflow:hidden;}
+.barra-fill{
+  height:100%;width:0%;
+  background:linear-gradient(90deg,var(--dorado2),var(--dorado3));
+  transition:width .9s ease;
+}
+.progreso-pct{font-size:10px;color:var(--texto3);margin-top:6px;font-family:'DM Mono',monospace;}
+
+/* ══ ERROR ══ */
+.error-banner{
+  display:none;margin-top:16px;
+  background:rgba(232,69,69,.08);
+  border:1px solid rgba(232,69,69,.3);
+  color:#ff9090;padding:12px 16px;font-size:12px;
+}
+.error-banner.visible{display:block;}
+
+/* ══ RESULTADO ══ */
+#resultado-seccion{display:none;max-width:960px;margin:0 auto;padding:60px 24px 80px;}
+
+.resultado-portada{
+  display:grid;grid-template-columns:1fr auto;
+  gap:24px;align-items:center;
+  padding:32px 36px;
+  background:var(--negro2);
+  border:1px solid var(--borde);
+  margin-bottom:32px;
+  position:relative;overflow:hidden;
+}
+.resultado-portada::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--dorado2),var(--dorado3));
+}
+.res-empresa-label{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--dorado);margin-bottom:6px;}
+.res-empresa-nombre{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;color:#fff;margin-bottom:4px;}
+.res-url{font-family:'DM Mono',monospace;font-size:11px;color:var(--texto2);}
+.res-resumen{font-size:13px;color:var(--texto2);line-height:1.7;margin-top:10px;max-width:560px;}
+.score-orbe{text-align:center;padding:20px 32px;border:1px solid var(--borde);background:var(--negro3);}
+.score-orbe-num{font-family:'Playfair Display',serif;font-size:72px;font-weight:900;line-height:1;}
+.score-orbe-den{font-size:12px;color:var(--texto2);letter-spacing:.1em;margin:2px 0 10px;}
+.score-nivel-badge{
+  display:inline-block;font-size:9px;font-weight:800;
+  letter-spacing:.15em;text-transform:uppercase;
+  padding:4px 14px;border:1px solid currentColor;
+}
+
+/* ══ SECCIÓN TÍTULO ══ */
+.seccion-titulo{
+  display:flex;align-items:center;gap:12px;
+  margin-bottom:20px;margin-top:40px;
+}
+.seccion-titulo-linea{flex:1;height:1px;background:var(--borde2);}
+.seccion-titulo-texto{
+  font-size:9px;letter-spacing:.25em;text-transform:uppercase;
+  color:var(--dorado);font-weight:700;white-space:nowrap;
+}
+
+/* ══ PILARES ══ */
+.pilares-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:8px;}
+.pilar-card{
+  background:var(--negro2);border:1px solid var(--borde2);
+  padding:22px 24px;transition:border-color .2s;
+}
+.pilar-card:hover{border-color:rgba(245,197,24,.25);}
+.pilar-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;}
+.pilar-nombre{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--texto2);}
+.pilar-score{font-family:'Playfair Display',serif;font-size:32px;font-weight:700;line-height:1;}
+.pilar-barra-bg{height:3px;background:var(--negro4);margin-bottom:12px;}
+.pilar-barra-fill{height:100%;transition:width 1.4s ease;}
+.pilar-hallazgo{font-size:12px;color:var(--texto2);line-height:1.65;margin-bottom:8px;}
+.pilar-accion{font-size:11px;color:var(--dorado);line-height:1.55;padding-left:12px;border-left:2px solid var(--dorado2);}
+
+/* ══ COMPETENCIA ══ */
+.comp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.comp-card{background:var(--negro2);border:1px solid var(--borde2);padding:20px;}
+.comp-card.destacado{border-color:rgba(245,197,24,.35);}
+.comp-nombre{font-size:13px;font-weight:700;color:#fff;margin-bottom:3px;}
+.comp-tipo{font-size:9px;color:var(--texto2);letter-spacing:.1em;text-transform:uppercase;margin-bottom:14px;}
+.comp-fila{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.comp-fila-label{font-size:10px;color:var(--texto2);}
+.comp-fila-score{font-family:'DM Mono',monospace;font-size:13px;font-weight:600;}
+.comp-barra-bg{height:2px;background:var(--negro4);margin-bottom:10px;}
+.comp-barra-fill{height:100%;}
+
+/* ══ INFLUENCERS ══ */
+.influencers-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.inf-card{
+  background:var(--negro2);border:1px solid var(--borde2);
+  padding:20px;transition:border-color .2s;
+}
+.inf-card:hover{border-color:rgba(245,197,24,.3);}
+.inf-tipo-badge{
+  display:inline-block;font-size:8px;letter-spacing:.12em;text-transform:uppercase;
+  font-weight:700;padding:3px 10px;margin-bottom:12px;
+  background:rgba(245,197,24,.1);color:var(--dorado);border:1px solid var(--borde);
+}
+.inf-nombre{font-size:14px;font-weight:700;color:#fff;margin-bottom:2px;}
+.inf-handle{font-family:'DM Mono',monospace;font-size:11px;color:var(--dorado);margin-bottom:10px;}
+.inf-stats{display:flex;gap:14px;margin-bottom:12px;}
+.inf-stat{text-align:center;}
+.inf-stat-val{font-size:13px;font-weight:700;color:#fff;font-family:'DM Mono',monospace;}
+.inf-stat-label{font-size:8px;color:var(--texto2);letter-spacing:.08em;text-transform:uppercase;}
+.inf-fit{font-size:11px;color:var(--texto2);line-height:1.6;}
+.inf-costo{
+  margin-top:12px;padding-top:10px;
+  border-top:1px solid var(--borde2);
+  font-size:10px;color:var(--texto2);
+}
+.inf-costo strong{color:var(--verde);}
+
+/* ══ ALIANZAS ══ */
+.alianza-hero{
+  background:var(--negro2);border:1px solid var(--borde);
+  padding:32px 36px;margin-bottom:16px;
+  position:relative;overflow:hidden;
+}
+.alianza-hero::after{
+  content:'360°';
+  position:absolute;right:20px;bottom:-20px;
+  font-family:'Playfair Display',serif;
+  font-size:120px;font-weight:900;
+  color:rgba(245,197,24,0.04);
+  pointer-events:none;line-height:1;
+}
+.alianza-tipo-badge{
+  display:inline-block;font-size:9px;letter-spacing:.2em;text-transform:uppercase;
+  font-weight:700;padding:4px 14px;margin-bottom:16px;
+  background:var(--dorado);color:var(--negro);
+}
+.alianza-titulo{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:#fff;margin-bottom:8px;}
+.alianza-desc{font-size:13px;color:var(--texto2);line-height:1.75;max-width:580px;margin-bottom:20px;}
+.alianza-items{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px;}
+.alianza-item{
+  font-size:10px;color:var(--texto);
+  background:var(--negro3);border:1px solid var(--borde2);
+  padding:5px 14px;letter-spacing:.06em;
+}
+.alianza-cta{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--dorado);color:var(--negro);
+  padding:12px 24px;font-size:12px;font-weight:800;
+  letter-spacing:.1em;text-transform:uppercase;
+  text-decoration:none;cursor:pointer;border:none;
+  font-family:'DM Sans',sans-serif;transition:all .2s;
+}
+.alianza-cta:hover{background:var(--dorado3);}
+.alianza-casos{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+.caso-card{
+  background:var(--negro3);border:1px solid var(--borde2);
+  padding:16px 18px;
+}
+.caso-marca{font-size:12px;font-weight:700;color:#fff;margin-bottom:3px;}
+.caso-resultado{font-size:11px;color:var(--verde);}
+.caso-desc{font-size:11px;color:var(--texto2);margin-top:5px;line-height:1.55;}
+
+/* ══ PLAN ACCIÓN ══ */
+.plan-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.plan-card{background:var(--negro2);border:1px solid var(--borde2);overflow:hidden;}
+.plan-header{padding:14px 18px;}
+.plan-num{font-family:'Playfair Display',serif;font-size:28px;font-weight:900;line-height:1;}
+.plan-titulo{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-top:2px;}
+.plan-periodo{font-size:9px;letter-spacing:.1em;margin-top:2px;}
+.plan-items{padding:0 18px 18px;list-style:none;display:flex;flex-direction:column;gap:9px;}
+.plan-item{
+  font-size:11px;color:var(--texto2);line-height:1.6;
+  padding-left:12px;border-left:2px solid var(--borde2);
+  transition:all .2s;
+}
+.plan-item:hover{color:var(--texto);border-left-color:var(--dorado);}
+
+/* ══ ACCIONES BAR ══ */
+.acciones-bar{
+  display:flex;gap:12px;
+  padding-top:28px;border-top:1px solid var(--borde2);
+  margin-top:40px;
+}
+.btn-pdf{
+  background:var(--dorado);color:var(--negro);border:none;
+  padding:13px 26px;font-family:'DM Sans',sans-serif;
+  font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+  cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:8px;
+}
+.btn-pdf:hover{background:var(--dorado3);}
+.btn-pdf:disabled{opacity:.4;cursor:not-allowed;}
+.btn-nuevo{
+  background:none;color:var(--texto2);
+  border:1px solid var(--borde2);
+  padding:13px 26px;font-family:'DM Sans',sans-serif;
+  font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+  cursor:pointer;transition:all .2s;
+}
+.btn-nuevo:hover{border-color:var(--dorado);color:var(--dorado);}
+
+/* ══ DASHBOARD ══ */
+.dashboard-wrap{max-width:1100px;margin:0 auto;padding:56px 24px 80px;}
+.dash-top{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:40px;}
+.dash-titulo{font-family:'Playfair Display',serif;font-size:34px;font-weight:700;color:#fff;margin-bottom:5px;}
+.dash-sub{font-size:13px;color:var(--texto2);}
+.dash-kpis{display:flex;gap:28px;text-align:right;}
+.kpi-val{font-family:'Playfair Display',serif;font-size:30px;font-weight:700;color:var(--dorado);}
+.kpi-label{font-size:9px;color:var(--texto2);letter-spacing:.15em;text-transform:uppercase;}
+.tabla{width:100%;border-collapse:collapse;}
+.tabla th{
+  font-size:9px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--texto2);padding:0 16px 12px;
+  border-bottom:1px solid var(--borde2);text-align:left;font-weight:500;
+}
+.tabla td{
+  padding:16px 16px;border-bottom:1px solid var(--borde2);
+  font-size:12px;vertical-align:middle;
+}
+.tabla tr:hover td{background:rgba(245,197,24,.02);}
+.td-empresa{color:#fff;font-weight:600;}
+.td-url{font-family:'DM Mono',monospace;font-size:10px;color:var(--texto2);}
+.td-fecha{font-size:10px;color:var(--texto2);}
+.score-mini{display:flex;align-items:center;gap:10px;}
+.score-mini-num{font-family:'DM Mono',monospace;font-size:14px;font-weight:700;}
+.score-mini-barra{width:52px;height:3px;background:var(--negro4);}
+.score-mini-fill{height:100%;}
+.nivel-chip{
+  font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+  padding:3px 10px;border:1px solid currentColor;
+}
+.btn-ver{
+  background:none;border:1px solid var(--borde2);
+  color:var(--texto2);padding:5px 14px;
+  font-size:10px;cursor:pointer;font-family:'DM Sans',sans-serif;
+  letter-spacing:.08em;transition:all .2s;
+}
+.btn-ver:hover{border-color:var(--dorado);color:var(--dorado);}
+.empty-dash{text-align:center;padding:72px 24px;color:var(--texto2);}
+.empty-icono{font-size:44px;margin-bottom:14px;opacity:.25;}
+.empty-titulo{font-family:'Playfair Display',serif;font-size:20px;color:var(--texto);margin-bottom:6px;}
+
+/* ══ UTILIDADES ══ */
+.color-verde{color:var(--verde);}
+.color-dorado{color:var(--dorado);}
+.color-naranja{color:var(--naranja);}
+.color-rojo{color:var(--rojo);}
+
+@media(max-width:768px){
+  header{padding:0 20px;}
+  .agentes-grid{grid-template-columns:repeat(3,1fr);}
+  .pilares-grid,.comp-grid,.influencers-grid,.plan-grid{grid-template-columns:1fr;}
+  .resultado-portada{grid-template-columns:1fr;}
+  .fila-input{flex-direction:column;}
+  .alianza-casos{grid-template-columns:1fr;}
+  .tarjeta-input{padding:24px 20px;}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="logo-mark">OI</div>
+    <div class="logo-texto">
+      <div class="logo-nombre">Orlando Iguarán</div>
+      <div class="logo-sub">Método 360™ · Suite IA</div>
+    </div>
+  </div>
+  <nav class="nav">
+    <button class="nav-btn activo" onclick="irA('auditoria',this)">Nueva Auditoría</button>
+    <button class="nav-btn" onclick="irA('dashboard',this)">Dashboard</button>
+  </nav>
+</header>
+
+<!-- ════════════ VISTA: AUDITORÍA ════════════ -->
+<div id="vista-auditoria" class="vista activa">
+  <div class="auditoria-wrap">
+    <div class="eyebrow">Diagnóstico de Marketing Digital</div>
+    <h1 class="titulo-hero">Auditoría <em>IA</em><br>en tiempo real</h1>
+    <p class="subtitulo-hero">Pega la URL del cliente. 5 agentes IA analizan su presencia digital en paralelo y generan un reporte PDF con el Método 360™.</p>
+
+    <div class="tarjeta-input">
+      <span class="etiqueta">URL del Cliente</span>
+      <div class="fila-input">
+        <input type="url" class="url-input" id="url-input" placeholder="https://nombrecliente.com" />
+        <button class="btn-analizar" id="btn-analizar" onclick="iniciarAuditoria()">Analizar →</button>
+      </div>
+
+      <div class="agentes-grid" style="margin-top:22px">
+        <div class="agente-card" id="ag-0">
+          <span class="agente-icono">🌐</span>
+          <div class="agente-nombre">Web &<br>Landing</div>
+          <div class="agente-estado" id="ag-estado-0">En espera</div>
+        </div>
+        <div class="agente-card" id="ag-1">
+          <span class="agente-icono">📱</span>
+          <div class="agente-nombre">Redes<br>Sociales</div>
+          <div class="agente-estado" id="ag-estado-1">En espera</div>
+        </div>
+        <div class="agente-card" id="ag-2">
+          <span class="agente-icono">🔍</span>
+          <div class="agente-nombre">SEO &<br>Google</div>
+          <div class="agente-estado" id="ag-estado-2">En espera</div>
+        </div>
+        <div class="agente-card" id="ag-3">
+          <span class="agente-icono">⚔️</span>
+          <div class="agente-nombre">Análisis<br>Competencia</div>
+          <div class="agente-estado" id="ag-estado-3">En espera</div>
+        </div>
+        <div class="agente-card" id="ag-4">
+          <span class="agente-icono">💰</span>
+          <div class="agente-nombre">Pauta<br>& Ads</div>
+          <div class="agente-estado" id="ag-estado-4">En espera</div>
+        </div>
+      </div>
+
+      <div class="error-banner" id="error-banner"></div>
+    </div>
+
+    <div class="barra-progreso-wrap" id="barra-progreso">
+      <div class="progreso-header">
+        <span class="progreso-label">Analizando</span>
+        <span class="progreso-msg" id="progreso-msg">Iniciando agentes...</span>
+      </div>
+      <div class="barra-track"><div class="barra-fill" id="barra-fill"></div></div>
+      <div class="progreso-pct" id="progreso-pct">0%</div>
+    </div>
+  </div>
+
+  <!-- RESULTADO -->
+  <div id="resultado-seccion">
+
+    <!-- PORTADA -->
+    <div class="resultado-portada">
+      <div>
+        <div class="res-empresa-label">Reporte de Auditoría IA · Método 360™</div>
+        <div class="res-empresa-nombre" id="res-empresa">—</div>
+        <div class="res-url" id="res-url">—</div>
+        <div class="res-resumen" id="res-resumen"></div>
+      </div>
+      <div class="score-orbe">
+        <div class="score-orbe-num" id="res-score">—</div>
+        <div class="score-orbe-den">/100 · Score Global</div>
+        <div class="score-nivel-badge" id="res-nivel">—</div>
+      </div>
+    </div>
+
+    <!-- PILARES -->
+    <div class="seccion-titulo">
+      <div class="seccion-titulo-linea"></div>
+      <div class="seccion-titulo-texto">Análisis por Pilar</div>
+      <div class="seccion-titulo-linea"></div>
+    </div>
+    <div class="pilares-grid" id="pilares-grid"></div>
+
+    <!-- COMPETENCIA -->
+    <div class="seccion-titulo">
+      <div class="seccion-titulo-linea"></div>
+      <div class="seccion-titulo-texto">Benchmarking Competitivo</div>
+      <div class="seccion-titulo-linea"></div>
+    </div>
+    <div class="comp-grid" id="comp-grid"></div>
+
+    <!-- INFLUENCERS -->
+    <div class="seccion-titulo">
+      <div class="seccion-titulo-linea"></div>
+      <div class="seccion-titulo-texto">Influencers Recomendados</div>
+      <div class="seccion-titulo-linea"></div>
+    </div>
+    <div class="influencers-grid" id="influencers-grid"></div>
+
+    <!-- ALIANZAS -->
+    <div class="seccion-titulo">
+      <div class="seccion-titulo-linea"></div>
+      <div class="seccion-titulo-texto">Alianzas Estratégicas · Método 360™</div>
+      <div class="seccion-titulo-linea"></div>
+    </div>
+    <div id="alianzas-seccion"></div>
+
+    <!-- PLAN -->
+    <div class="seccion-titulo">
+      <div class="seccion-titulo-linea"></div>
+      <div class="seccion-titulo-texto">Plan de Acción Prioritario</div>
+      <div class="seccion-titulo-linea"></div>
+    </div>
+    <div class="plan-grid" id="plan-grid"></div>
+
+    <!-- ACCIONES -->
+    <div class="acciones-bar">
+      <button class="btn-pdf" id="btn-pdf" onclick="descargarPDF()">⬇ Descargar PDF</button>
+      <button class="btn-nuevo" onclick="nuevaAuditoria()">+ Nueva Auditoría</button>
+    </div>
+
+  </div><!-- /resultado-seccion -->
+</div><!-- /vista-auditoria -->
+
+<!-- ════════════ VISTA: DASHBOARD ════════════ -->
+<div id="vista-dashboard" class="vista">
+  <div class="dashboard-wrap">
+    <div class="dash-top">
+      <div>
+        <div class="dash-titulo">Cartera de Clientes</div>
+        <div class="dash-sub">Historial completo de auditorías realizadas</div>
+      </div>
+      <div class="dash-kpis">
+        <div><div class="kpi-val" id="kpi-total">0</div><div class="kpi-label">Auditorías</div></div>
+        <div><div class="kpi-val" id="kpi-prom">—</div><div class="kpi-label">Score Prom.</div></div>
+      </div>
+    </div>
+    <div id="dash-contenido">
+      <div class="empty-dash">
+        <div class="empty-icono">📊</div>
+        <div class="empty-titulo">Sin auditorías aún</div>
+        <div>Realiza tu primera auditoría para ver el historial aquí.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════
+//  ESTADO
+// ════════════════════════════════════════════
+let historial = JSON.parse(localStorage.getItem('oi360_historial')||'[]');
+let resultadoActual = null;
+
+// ════════════════════════════════════════════
+//  NAVEGACIÓN
+// ════════════════════════════════════════════
+function irA(vista, btn){
+  document.querySelectorAll('.vista').forEach(v=>v.classList.remove('activa'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('activo'));
+  document.getElementById('vista-'+vista).classList.add('activa');
+  if(btn) btn.classList.add('activo');
+  if(vista==='dashboard') renderDashboard();
+}
+
+// ════════════════════════════════════════════
+//  AUDITORÍA
+// ════════════════════════════════════════════
+async function iniciarAuditoria(){
+  let url = document.getElementById('url-input').value.trim();
+  if(!url){ mostrarError('Ingresa la URL del cliente.'); return; }
+  if(!url.startsWith('http')) url = 'https://'+url;
+
+  ocultarError();
+  document.getElementById('btn-analizar').disabled = true;
+  document.getElementById('resultado-seccion').style.display = 'none';
+  document.getElementById('barra-progreso').classList.add('visible');
+  resetAgentes();
+
+  try {
+    await animarYAnalizar(url);
+  } catch(e) {
+    mostrarError('Error al analizar: '+e.message);
+    resetUI();
+  }
+}
+
+const PASOS = [
+  { msg:'Accediendo y leyendo el sitio web...', pct:10, ag:0, estado:'Analizando CTA y velocidad...' },
+  { msg:'Analizando contenido y conversión...', pct:25, ag:0, estado:'✓ Completado' },
+  { msg:'Revisando redes sociales...', pct:38, ag:1, estado:'Revisando engagement...' },
+  { msg:'Auditando Instagram y frecuencia...', pct:50, ag:1, estado:'✓ Completado' },
+  { msg:'Evaluando SEO y posicionamiento local...', pct:62, ag:2, estado:'✓ Completado' },
+  { msg:'Investigando top 3 competidores...', pct:74, ag:3, estado:'✓ Completado' },
+  { msg:'Revisando Meta Ads Library...', pct:84, ag:4, estado:'✓ Completado' },
+  { msg:'Generando reporte con IA...', pct:94, ag:-1, estado:'' },
+];
+
+async function animarYAnalizar(url){
+  // Activar agentes progresivamente
+  let agIdx=0;
+  const agTimer = setInterval(()=>{
+    if(agIdx<5){ activarAgente(agIdx); agIdx++; }
+    else clearInterval(agTimer);
+  }, 700);
+
+  // Animar pasos
+  for(let p of PASOS){
+    setProgreso(p.pct, p.msg);
+    if(p.ag>=0){ activarAgente(p.ag); setEstadoAgente(p.ag, p.estado); }
+    await sleep(650);
+  }
+
+  // Llamar API
+  const data = await llamarAPI(url);
+  clearInterval(agTimer);
+
+  // Completar todos
+  for(let i=0;i<5;i++) completarAgente(i);
+  setProgreso(100,'✓ Análisis completado');
+  await sleep(700);
+
+  document.getElementById('barra-progreso').classList.remove('visible');
+  document.getElementById('btn-analizar').disabled = false;
+  mostrarResultado(data, url);
+}
+
+// ════════════════════════════════════════════
+//  API
+// ════════════════════════════════════════════
+async function llamarAPI(url){
+  const prompt = `Eres el mejor auditor de marketing digital de Colombia. Analiza el sitio web: ${url}
+
+Actúa como 5 agentes especializados que trabajan en paralelo:
+
+AGENTE 1 — WEB/LANDING: Analiza velocidad de carga estimada, claridad de la propuesta de valor, CTAs visibles, estructura de conversión, diseño de confianza.
+AGENTE 2 — REDES SOCIALES: Evalúa presencia en Instagram/TikTok, frecuencia de publicación estimada, tipo de contenido dominante, consistencia de voz de marca, ratio de engagement estimado.
+AGENTE 3 — SEO/GOOGLE: Keywords principales por las que aparece, reseñas de Google estimadas, ficha de Google Business, posicionamiento local, estructura técnica básica.
+AGENTE 4 — COMPETENCIA: Identifica los 3 competidores directos reales de esta empresa, analízalos en los mismos pilares.
+AGENTE 5 — PAUTA/ADS: Detecta si tiene pauta activa en Meta/Google, tipo de creatividades típicas del sector, oportunidades de pauta.
+
+Responde ÚNICAMENTE con este JSON (sin markdown, sin texto adicional):
+{
+  "empresa": "Nombre real de la empresa",
+  "sector": "Sector del negocio",
+  "scoreGlobal": 58,
+  "resumenEjecutivo": "2-3 oraciones muy específicas sobre el estado de marketing digital de esta empresa.",
+  "pilares": [
+    {"nombre":"Web & Conversión","score":62,"peso":20,"semaforo":"amarillo","hallazgo":"Hallazgo específico y crítico.","accion":"Acción concreta inmediata."},
+    {"nombre":"Redes Sociales","score":45,"peso":20,"semaforo":"rojo","hallazgo":"Hallazgo específico.","accion":"Acción concreta."},
+    {"nombre":"SEO & Visibilidad","score":55,"peso":20,"semaforo":"amarillo","hallazgo":"Hallazgo específico.","accion":"Acción concreta."},
+    {"nombre":"Posicionamiento","score":60,"peso":15,"semaforo":"amarillo","hallazgo":"Hallazgo específico.","accion":"Acción concreta."},
+    {"nombre":"Marca & Confianza","score":40,"peso":15,"semaforo":"rojo","hallazgo":"Hallazgo específico.","accion":"Acción concreta."},
+    {"nombre":"Pauta & Crecimiento","score":35,"peso":10,"semaforo":"rojo","hallazgo":"Hallazgo específico.","accion":"Acción concreta."}
+  ],
+  "competidores": [
+    {"nombre":"Competidor Real 1","tipo":"Competidor directo","scores":{"web":70,"redes":65,"seo":75}},
+    {"nombre":"Competidor Real 2","tipo":"Competidor indirecto","scores":{"web":55,"redes":80,"seo":60}},
+    {"nombre":"CLIENTE_PLACEHOLDER","tipo":"Cliente analizado","scores":{"web":0,"redes":0,"seo":0}}
+  ],
+  "influencers": [
+    {"tipo":"Micro-influencer","nombre":"Nombre sugerido o perfil tipo","handle":"@handle_sugerido","seguidores":"15K-40K","engagement":"4-6%","fit":"Por qué encaja con esta marca específicamente.","costoEstimado":"$300K-800K COP por post"},
+    {"tipo":"Macro-influencer","nombre":"Nombre sugerido o perfil tipo","handle":"@handle_sugerido","seguidores":"100K-500K","engagement":"2-3%","fit":"Por qué encaja.","costoEstimado":"$1.5M-4M COP por post"},
+    {"tipo":"Creator de nicho","nombre":"Nombre sugerido o perfil tipo","handle":"@handle_sugerido","seguidores":"30K-80K","engagement":"5-8%","fit":"Por qué encaja.","costoEstimado":"$500K-1.2M COP por post"}
+  ],
+  "alianza": {
+    "tipoRecomendado": "Alianza con influencer + co-branding",
+    "descripcion": "Descripción específica de qué tipo de alianza le conviene más a esta empresa basada en su sector y situación.",
+    "beneficios": ["Beneficio 1 concreto","Beneficio 2 concreto","Beneficio 3 concreto","Beneficio 4 concreto"],
+    "casosExito": [
+      {"marca":"Caso éxito 1 real de Orlando","resultado":"Resultado específico con números","descripcion":"Breve descripción."},
+      {"marca":"Caso éxito 2 real de Orlando","resultado":"Resultado específico","descripcion":"Breve descripción."}
+    ]
+  },
+  "plan": {
+    "semana1": ["Acción urgente 1 muy específica","Acción urgente 2","Acción urgente 3"],
+    "mes1a3": ["Acción mediano plazo 1","Acción mediano plazo 2","Acción mediano plazo 3"],
+    "mes3a6": ["Acción estratégica 1","Acción estratégica 2","Acción estratégica 3"]
+  }
+}
+
+IMPORTANTE: El semáforo debe ser "verde" (score>=70), "amarillo" (40-69) o "rojo" (<40). El tercer competidor debe tener los scores del cliente: web=pilares[0].score, redes=pilares[1].score, seo=pilares[2].score. Los influencers deben ser relevantes para el sector específico de este cliente. Sé brutalmente honesto y específico.`;
+
+  const res = await fetch('/api/auditoria', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ url, prompt })
+  });
+  if(!res.ok) throw new Error('Error del servidor: '+res.status);
+  return await res.json();
+}
+
+// ════════════════════════════════════════════
+//  RENDER RESULTADO
+// ════════════════════════════════════════════
+function mostrarResultado(data, url){
+  resultadoActual = { ...data, url, fecha: new Date().toISOString() };
+  const sg = data.scoreGlobal||0;
+
+  // Portada
+  document.getElementById('res-empresa').textContent = data.empresa||url;
+  document.getElementById('res-url').textContent = url;
+  document.getElementById('res-resumen').textContent = data.resumenEjecutivo||'';
+  const scoreEl = document.getElementById('res-score');
+  scoreEl.textContent = sg;
+  scoreEl.className = 'score-orbe-num '+scoreClase(sg);
+  const nivelEl = document.getElementById('res-nivel');
+  nivelEl.textContent = scoreNivel(sg);
+  nivelEl.style.color = scoreColor(sg);
+  nivelEl.style.borderColor = scoreColor(sg);
+
+  // Pilares
+  const pg = document.getElementById('pilares-grid');
+  pg.innerHTML = (data.pilares||[]).map(p=>{
+    const sem = p.semaforo==='verde'?'#3DBA7A': p.semaforo==='rojo'?'#E84545':'#F5C518';
+    return `<div class="pilar-card">
+      <div class="pilar-header">
+        <span class="pilar-nombre">${p.nombre}</span>
+        <span class="pilar-score" style="color:${sem}">${p.score}</span>
+      </div>
+      <div class="pilar-barra-bg"><div class="pilar-barra-fill" style="width:${p.score}%;background:${sem}"></div></div>
+      <p class="pilar-hallazgo">${p.hallazgo||''}</p>
+      <p class="pilar-accion">→ ${p.accion||''}</p>
+    </div>`;
+  }).join('');
+
+  // Competencia
+  const cg = document.getElementById('comp-grid');
+  cg.innerHTML = (data.competidores||[]).map((c,i)=>{
+    const destacado = i===2 ? 'destacado' : '';
+    const label = i===2 ? ' <span style="color:var(--dorado);font-size:9px">← CLIENTE</span>' : '';
+    const sc = c.scores||{};
+    return `<div class="comp-card ${destacado}">
+      <div class="comp-nombre">${c.nombre}${label}</div>
+      <div class="comp-tipo">${c.tipo}</div>
+      ${Object.entries(sc).map(([k,v])=>`
+        <div class="comp-fila">
+          <span class="comp-fila-label">${k.charAt(0).toUpperCase()+k.slice(1)}</span>
+          <span class="comp-fila-score ${scoreClase(v)}">${v}</span>
+        </div>
+        <div class="comp-barra-bg"><div class="comp-barra-fill" style="width:${v}%;background:${scoreColor(v)}"></div></div>
+      `).join('')}
+    </div>`;
+  }).join('');
+
+  // Influencers
+  const ig = document.getElementById('influencers-grid');
+  ig.innerHTML = (data.influencers||[]).map(inf=>`
+    <div class="inf-card">
+      <div class="inf-tipo-badge">${inf.tipo||'Influencer'}</div>
+      <div class="inf-nombre">${inf.nombre||'—'}</div>
+      <div class="inf-handle">${inf.handle||''}</div>
+      <div class="inf-stats">
+        <div class="inf-stat">
+          <div class="inf-stat-val">${inf.seguidores||'—'}</div>
+          <div class="inf-stat-label">Seguidores</div>
+        </div>
+        <div class="inf-stat">
+          <div class="inf-stat-val">${inf.engagement||'—'}</div>
+          <div class="inf-stat-label">Engagement</div>
+        </div>
+      </div>
+      <p class="inf-fit">${inf.fit||''}</p>
+      <div class="inf-costo">Costo estimado: <strong>${inf.costoEstimado||'—'}</strong></div>
+    </div>
+  `).join('');
+
+  // Alianzas
+  const alianza = data.alianza||{};
+  const as = document.getElementById('alianzas-seccion');
+  as.innerHTML = `
+    <div class="alianza-hero">
+      <div class="alianza-tipo-badge">${alianza.tipoRecomendado||'Alianza Estratégica'}</div>
+      <div class="alianza-titulo">¿Qué tipo de alianza necesita este negocio?</div>
+      <div class="alianza-desc">${alianza.descripcion||''}</div>
+      <div class="alianza-items">
+        ${(alianza.beneficios||[]).map(b=>`<div class="alianza-item">✓ ${b}</div>`).join('')}
+      </div>
+      <a href="https://wa.link/33ogyz" target="_blank" class="alianza-cta">
+        Hablar con Orlando 360™ →
+      </a>
+    </div>
+    ${(alianza.casosExito||[]).length>0?`
+    <div style="margin-bottom:8px;margin-top:16px">
+      <span style="font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--texto2)">Casos de Éxito</span>
+    </div>
+    <div class="alianza-casos">
+      ${(alianza.casosExito||[]).map(c=>`
+        <div class="caso-card">
+          <div class="caso-marca">${c.marca}</div>
+          <div class="caso-resultado">📈 ${c.resultado}</div>
+          <div class="caso-desc">${c.descripcion}</div>
+        </div>
+      `).join('')}
+    </div>`:''}
+  `;
+
+  // Plan
+  const plan = data.plan||{};
+  const pg2 = document.getElementById('plan-grid');
+  const fases = [
+    {num:'01', titulo:'Quick Wins', periodo:'Esta semana', items:plan.semana1||[], color:'var(--dorado)'},
+    {num:'02', titulo:'Medio Plazo', periodo:'1 — 3 meses', items:plan.mes1a3||[], color:'var(--naranja)'},
+    {num:'03', titulo:'Estratégico', periodo:'3 — 6 meses', items:plan.mes3a6||[], color:'var(--verde)'},
+  ];
+  pg2.innerHTML = fases.map(f=>`
+    <div class="plan-card">
+      <div class="plan-header" style="background:var(--negro3);border-bottom:2px solid ${f.color}">
+        <div class="plan-num" style="color:${f.color}">${f.num}</div>
+        <div class="plan-titulo" style="color:${f.color}">${f.titulo}</div>
+        <div class="plan-periodo" style="color:var(--texto2)">${f.periodo}</div>
+      </div>
+      <ul class="plan-items">
+        ${f.items.map(i=>`<li class="plan-item">${i}</li>`).join('')}
+      </ul>
+    </div>
+  `).join('');
+
+  document.getElementById('resultado-seccion').style.display='block';
+  document.getElementById('resultado-seccion').scrollIntoView({behavior:'smooth',block:'start'});
+
+  guardarHistorial(resultadoActual);
+}
+
+// ════════════════════════════════════════════
+//  PDF
+// ════════════════════════════════════════════
+async function descargarPDF(){
+  if(!resultadoActual) return;
+  const btn = document.getElementById('btn-pdf');
+  btn.textContent='⏳ Generando PDF...';
+  btn.disabled=true;
+  try{
+    const res = await fetch('/api/pdf',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(resultadoActual)
+    });
+    if(!res.ok) throw new Error('Error generando PDF');
+    const blob = await res.blob();
+    const a = document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download=`auditoria-${(resultadoActual.empresa||'cliente').replace(/\s/g,'-').toLowerCase()}-360.pdf`;
+    a.click();
+  } catch(e){ alert('Error: '+e.message); }
+  btn.textContent='⬇ Descargar PDF';
+  btn.disabled=false;
+}
+
+// ════════════════════════════════════════════
+//  HISTORIAL / DASHBOARD
+// ════════════════════════════════════════════
+function guardarHistorial(r){
+  historial.unshift(r);
+  if(historial.length>200) historial=historial.slice(0,200);
+  localStorage.setItem('oi360_historial',JSON.stringify(historial));
+}
+
+function renderDashboard(){
+  document.getElementById('kpi-total').textContent=historial.length;
+  const cont = document.getElementById('dash-contenido');
+  if(!historial.length){
+    cont.innerHTML=`<div class="empty-dash"><div class="empty-icono">📊</div><div class="empty-titulo">Sin auditorías aún</div><div>Realiza tu primera auditoría para ver el historial aquí.</div></div>`;
+    document.getElementById('kpi-prom').textContent='—';
+    return;
+  }
+  const prom=Math.round(historial.reduce((s,h)=>s+(h.scoreGlobal||0),0)/historial.length);
+  const kp=document.getElementById('kpi-prom');
+  kp.textContent=prom;
+  kp.className='kpi-val '+scoreClase(prom);
+
+  cont.innerHTML=`<table class="tabla">
+    <thead><tr>
+      <th>Empresa</th><th>URL</th><th>Score</th><th>Nivel</th><th>Sector</th><th>Fecha</th><th></th>
+    </tr></thead>
+    <tbody>
+      ${historial.map((h,i)=>`<tr>
+        <td class="td-empresa">${h.empresa||'—'}</td>
+        <td class="td-url">${(h.url||'').replace('https://','').replace('http://','')}</td>
+        <td>
+          <div class="score-mini">
+            <span class="score-mini-num ${scoreClase(h.scoreGlobal)}">${h.scoreGlobal}</span>
+            <div class="score-mini-barra"><div class="score-mini-fill" style="width:${h.scoreGlobal}%;background:${scoreColor(h.scoreGlobal)}"></div></div>
+          </div>
+        </td>
+        <td><span class="nivel-chip" style="color:${scoreColor(h.scoreGlobal)};border-color:${scoreColor(h.scoreGlobal)}">${scoreNivel(h.scoreGlobal)}</span></td>
+        <td class="td-url">${h.sector||'—'}</td>
+        <td class="td-fecha">${fmtFecha(h.fecha)}</td>
+        <td><button class="btn-ver" onclick="verDesdeHistorial(${i})">Ver →</button></td>
+      </tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
+function verDesdeHistorial(i){
+  resultadoActual=historial[i];
+  irA('auditoria', document.querySelector('.nav-btn'));
+  document.querySelectorAll('.nav-btn')[0].classList.add('activo');
+  document.querySelectorAll('.nav-btn')[1].classList.remove('activo');
+  mostrarResultado(historial[i], historial[i].url);
+}
+
+// ════════════════════════════════════════════
+//  HELPERS UI
+// ════════════════════════════════════════════
+function setProgreso(pct,msg){
+  document.getElementById('barra-fill').style.width=pct+'%';
+  document.getElementById('progreso-msg').textContent=msg;
+  document.getElementById('progreso-pct').textContent=pct+'%';
+}
+function activarAgente(i){
+  const el=document.getElementById('ag-'+i);
+  if(el){ el.classList.remove('listo'); el.classList.add('corriendo'); }
+}
+function setEstadoAgente(i,txt){
+  const el=document.getElementById('ag-estado-'+i);
+  if(el) el.textContent=txt;
+}
+function completarAgente(i){
+  const el=document.getElementById('ag-'+i);
+  if(el){ el.classList.remove('corriendo'); el.classList.add('listo'); }
+  setEstadoAgente(i,'✓ Listo');
+}
+function resetAgentes(){
+  for(let i=0;i<5;i++){
+    const el=document.getElementById('ag-'+i);
+    if(el){ el.classList.remove('corriendo','listo'); }
+    setEstadoAgente(i,'En espera');
+  }
+  setProgreso(0,'Iniciando agentes...');
+}
+function resetUI(){
+  document.getElementById('btn-analizar').disabled=false;
+  document.getElementById('barra-progreso').classList.remove('visible');
+  resetAgentes();
+}
+function nuevaAuditoria(){
+  document.getElementById('url-input').value='';
+  document.getElementById('resultado-seccion').style.display='none';
+  resetUI();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function mostrarError(msg){
+  const el=document.getElementById('error-banner');
+  el.textContent=msg; el.classList.add('visible');
+}
+function ocultarError(){
+  document.getElementById('error-banner').classList.remove('visible');
+}
+function scoreColor(s){ return s>=70?'#3DBA7A':s>=40?'#F5C518':'#E84545'; }
+function scoreClase(s){ return s>=70?'color-verde':s>=40?'color-dorado':'color-rojo'; }
+function scoreNivel(s){ return s>=70?'SÓLIDO':s>=40?'EN TRABAJO':'CRÍTICO'; }
+function fmtFecha(iso){
+  try{ return new Date(iso).toLocaleDateString('es-CO',{day:'2-digit',month:'short',year:'numeric'}); }
+  catch{ return iso; }
+}
+function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+</script>
+</body>
+</html>
