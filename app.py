@@ -2,7 +2,6 @@ from flask import Flask, request, jsonify, send_file, send_from_directory
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 import anthropic, json, os, re, io, requests
-import psycopg2
 from bs4 import BeautifulSoup
 from datetime import datetime
 from reportlab.lib.pagesizes import A4
