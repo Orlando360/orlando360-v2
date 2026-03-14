@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify, send_file, send_from_directory
-import anthropic, json, os, re, io
+import anthropic, json, os, re, io, requests
+from bs4 import BeautifulSoup
 from datetime import datetime
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
@@ -46,22 +47,182 @@ def semaforo_color(sem):
     if sem=='rojo': return ROJO
     return DORADO
 
+
+# ═══════════════════════════════════════════════════
+#  SCRAPER REAL — extrae datos de la URL del cliente
+# ═══════════════════════════════════════════════════
+def scrape_url(url):
+    """
+    Intenta scrapear la URL y devuelve un dict con los datos extraídos.
+    Si falla (bloqueo, timeout, error), devuelve el motivo explícitamente
+    para que Claude lo comunique en el análisis en lugar de inventar datos.
+    """
+    if not url or not url.startswith('http'):
+        return {'ok': False, 'razon': 'URL no proporcionada o inválida.'}
+
+    headers = {
+        'User-Agent': (
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) '
+            'AppleWebKit/537.36 (KHTML, like Gecko) '
+            'Chrome/120.0.0.0 Safari/537.36'
+        ),
+        'Accept-Language': 'es-CO,es;q=0.9,en;q=0.8',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    }
+
+    try:
+        resp = requests.get(url, headers=headers, timeout=12, allow_redirects=True)
+        resp.raise_for_status()
+    except requests.exceptions.Timeout:
+        return {'ok': False, 'razon': f'La URL tardó más de 12 segundos en responder: {url}'}
+    except requests.exceptions.ConnectionError:
+        return {'ok': False, 'razon': f'No se pudo conectar a: {url}'}
+    except requests.exceptions.HTTPError as e:
+        return {'ok': False, 'razon': f'El sitio devolvió error HTTP {e.response.status_code}: {url}'}
+    except Exception as e:
+        return {'ok': False, 'razon': f'Error inesperado al acceder a {url}: {str(e)}'}
+
+    soup = BeautifulSoup(resp.text, 'html.parser')
+
+    # Título y meta descripción
+    title = soup.title.string.strip() if soup.title and soup.title.string else ''
+    meta_desc = ''
+    meta_kw   = ''
+    og_title  = ''
+    og_desc   = ''
+
+    for tag in soup.find_all('meta'):
+        name    = (tag.get('name') or '').lower()
+        prop    = (tag.get('property') or '').lower()
+        content = tag.get('content') or ''
+        if name == 'description':
+            meta_desc = content[:300]
+        elif name == 'keywords':
+            meta_kw = content[:200]
+        elif prop == 'og:title':
+            og_title = content[:150]
+        elif prop == 'og:description':
+            og_desc = content[:300]
+
+    # Headings
+    h1s = [h.get_text(strip=True) for h in soup.find_all('h1')][:5]
+    h2s = [h.get_text(strip=True) for h in soup.find_all('h2')][:8]
+
+    # Links internos vs externos
+    all_links = soup.find_all('a', href=True)
+    internal_links = [a['href'] for a in all_links if url.split('/')[2] in a['href'] or a['href'].startswith('/')]
+    external_links = [a['href'] for a in all_links if a['href'].startswith('http') and url.split('/')[2] not in a['href']]
+
+    # Imágenes sin alt
+    imgs = soup.find_all('img')
+    imgs_sin_alt = sum(1 for i in imgs if not i.get('alt'))
+
+    # Texto visible (primeros 1500 chars para no inflar el prompt)
+    for tag in soup(['script', 'style', 'noscript', 'header', 'footer', 'nav']):
+        tag.decompose()
+    texto_visible = ' '.join(soup.get_text(separator=' ').split())[:1500]
+
+    # Redes sociales detectadas en links
+    redes = []
+    redes_keywords = ['instagram', 'facebook', 'tiktok', 'youtube', 'twitter', 'linkedin', 'pinterest']
+    for lnk in [a['href'] for a in all_links]:
+        for red in redes_keywords:
+            if red in lnk.lower() and red not in redes:
+                redes.append(red)
+
+    # WhatsApp / CTA de contacto
+    tiene_whatsapp = any('whatsapp' in (a.get('href') or '').lower() or 'wa.me' in (a.get('href') or '') for a in all_links)
+    tiene_tel      = any('tel:' in (a.get('href') or '') for a in all_links)
+    tiene_email    = any('mailto:' in (a.get('href') or '') for a in all_links)
+
+    # HTTPS
+    es_https = url.startswith('https://')
+
+    # Tiempo de carga (aproximado por tamaño de respuesta)
+    tam_kb = round(len(resp.content) / 1024, 1)
+
+    return {
+        'ok': True,
+        'url': url,
+        'titulo': title,
+        'meta_descripcion': meta_desc,
+        'meta_keywords': meta_kw,
+        'og_title': og_title,
+        'og_descripcion': og_desc,
+        'h1': h1s,
+        'h2': h2s,
+        'total_links': len(all_links),
+        'links_internos': len(internal_links),
+        'links_externos': len(external_links),
+        'total_imagenes': len(imgs),
+        'imagenes_sin_alt': imgs_sin_alt,
+        'redes_sociales_detectadas': redes,
+        'tiene_whatsapp': tiene_whatsapp,
+        'tiene_tel': tiene_tel,
+        'tiene_email': tiene_email,
+        'es_https': es_https,
+        'tamano_pagina_kb': tam_kb,
+        'texto_visible_muestra': texto_visible,
+    }
+
+
 # ═══ RUTAS ═══
 @app.route('/')
 def index():
     return send_from_directory('public', 'index.html')
 
+
 @app.route('/api/auditoria', methods=['POST'])
 def auditoria():
     if not API_KEY:
         return jsonify({'error': 'API key no configurada'}), 500
+
     data = request.json
+    empresa = data.get('empresa', '')
+    sector  = data.get('sector', '')
+    url     = data.get('url', '').strip()
+
+    # ── SCRAPING REAL ──
+    scrape = scrape_url(url)
+
+    if scrape['ok']:
+        contexto_web = f"""
+DATOS REALES EXTRAÍDOS DE LA URL {url}:
+- Título de la página: {scrape['titulo']}
+- Meta descripción: {scrape['meta_descripcion'] or 'No tiene'}
+- Meta keywords: {scrape['meta_keywords'] or 'No tiene'}
+- OG Title: {scrape['og_title'] or 'No tiene'}
+- OG Description: {scrape['og_descripcion'] or 'No tiene'}
+- H1 encontrados: {scrape['h1'] or 'Ninguno'}
+- H2 encontrados: {scrape['h2'] or 'Ninguno'}
+- Total links: {scrape['total_links']} ({scrape['links_internos']} internos, {scrape['links_externos']} externos)
+- Imágenes: {scrape['total_imagenes']} ({scrape['imagenes_sin_alt']} sin atributo alt)
+- Redes sociales vinculadas: {scrape['redes_sociales_detectadas'] or 'Ninguna detectada'}
+- WhatsApp en la web: {'Sí' if scrape['tiene_whatsapp'] else 'No'}
+- Teléfono en la web: {'Sí' if scrape['tiene_tel'] else 'No'}
+- Email de contacto: {'Sí' if scrape['tiene_email'] else 'No'}
+- HTTPS: {'Sí' if scrape['es_https'] else 'NO — problema de seguridad'}
+- Tamaño de página: {scrape['tamano_pagina_kb']} KB
+- Muestra de contenido visible: {scrape['texto_visible_muestra']}
+"""
+    else:
+        contexto_web = f"""
+ADVERTENCIA: No fue posible acceder a la URL para hacer scraping.
+Motivo: {scrape['razon']}
+Instrucción: Basa el análisis web en lo que puedas inferir del nombre de la empresa y sector.
+Indica explícitamente en el campo 'hallazgo' del pilar WEB que no se pudo acceder al sitio
+y por qué, para que el cliente sepa que el análisis de ese pilar es inferido, no medido.
+"""
+
+    prompt_base = data.get('prompt', '')
+    prompt_final = f"{contexto_web}\n\n{prompt_base}"
+
     try:
         client = anthropic.Anthropic(api_key=API_KEY)
         msg = client.messages.create(
             model='claude-sonnet-4-20250514',
             max_tokens=5000,
-            messages=[{'role': 'user', 'content': data.get('prompt', '')}]
+            messages=[{'role': 'user', 'content': prompt_final}]
         )
         raw = msg.content[0].text.strip()
         raw = re.sub(r'^```json\s*', '', raw)
@@ -73,13 +234,15 @@ def auditoria():
         comps = resultado.get('competidores', [])
         if len(comps) >= 3 and len(p) >= 3:
             comps[2]['scores'] = {
-                'web': p[0].get('score', 50),
+                'web':   p[0].get('score', 50),
                 'redes': p[1].get('score', 50),
-                'seo': p[2].get('score', 50),
+                'seo':   p[2].get('score', 50),
             }
+
         return jsonify(resultado)
+
     except json.JSONDecodeError as e:
-        return jsonify({'error': f'Error de parsing: {e}'}), 500
+        return jsonify({'error': f'Error de parsing JSON: {e}'}), 500
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -141,14 +304,16 @@ def generar_pdf(data):
         return d
 
     def seccion(titulo):
-        return Table(
+        t = Table(
             [[p(f'  {titulo}', fontName='Helvetica-Bold', fontSize=7,
                textColor=NEGRO, leading=9)]],
             colWidths=[ANCHO], rowHeights=[6*mm]
-        ), TableStyle([
+        )
+        t.setStyle(TableStyle([
             ('BACKGROUND',(0,0),(-1,-1),DORADO),
             ('VALIGN',(0,0),(-1,-1),'MIDDLE'),
-        ])
+        ]))
+        return t
 
     story = []
 
@@ -182,10 +347,8 @@ def generar_pdf(data):
     story.append(portada)
     story.append(Spacer(1, 5*mm))
 
-    # Línea dorada
     story.append(HRFlowable(width='100%', thickness=1.5, color=DORADO2, spaceAfter=4*mm))
 
-    # Resumen
     if resumen:
         r = Table([[p(resumen, fontSize=9, textColor=TEXTO2, leading=16)]],
                   colWidths=[ANCHO])
@@ -199,9 +362,7 @@ def generar_pdf(data):
         story.append(Spacer(1, 7*mm))
 
     # ── PILARES ──
-    t, ts = seccion('ANÁLISIS POR PILAR')
-    t.setStyle(ts)
-    story.append(t)
+    story.append(seccion('ANÁLISIS POR PILAR'))
     story.append(Spacer(1, 3*mm))
 
     for p_ in pilares:
@@ -232,9 +393,7 @@ def generar_pdf(data):
     story.append(Spacer(1, 5*mm))
 
     # ── COMPETENCIA ──
-    t, ts = seccion('BENCHMARKING COMPETITIVO')
-    t.setStyle(ts)
-    story.append(t)
+    story.append(seccion('BENCHMARKING COMPETITIVO'))
     story.append(Spacer(1, 3*mm))
 
     if comps:
@@ -282,9 +441,7 @@ def generar_pdf(data):
     story.append(Spacer(1, 7*mm))
 
     # ── INFLUENCERS ──
-    t, ts = seccion('INFLUENCERS RECOMENDADOS')
-    t.setStyle(ts)
-    story.append(t)
+    story.append(seccion('INFLUENCERS RECOMENDADOS'))
     story.append(Spacer(1, 3*mm))
 
     if infs:
@@ -319,30 +476,21 @@ def generar_pdf(data):
     story.append(Spacer(1, 5*mm))
 
     # ── ALIANZAS ──
-    t, ts = seccion('ALIANZAS ESTRATÉGICAS · MÉTODO 360™')
-    t.setStyle(ts)
-    story.append(t)
+    story.append(seccion('ALIANZAS ESTRATÉGICAS · MÉTODO 360™'))
     story.append(Spacer(1, 3*mm))
 
     if alianza:
-        ali_rows = [
-            [p(alianza.get('tipoRecomendado','Alianza Estratégica').upper(),
-               fontName='Helvetica-Bold', fontSize=7, textColor=NEGRO, leading=9)],
-            [p('¿Qué tipo de alianza necesita este negocio?',
-               fontName='Helvetica-Bold', fontSize=11, textColor=BLANCO, leading=15)],
+        at = Table([
+            [p('TIPO:', fontSize=6, textColor=GRIS)],
+            [p(alianza.get('tipoRecomendado',''), fontName='Helvetica-Bold', fontSize=8, textColor=DORADO)],
+            [Spacer(1,3)],
             [p(alianza.get('descripcion',''), fontSize=8, textColor=TEXTO2, leading=13)],
-            [p('  ·  '.join(alianza.get('beneficios',[])), fontSize=7, textColor=DORADO, leading=12)],
-        ]
-        at = Table([[p('TIPO:', fontSize=6, textColor=GRIS)],
-                    [p(alianza.get('tipoRecomendado',''), fontName='Helvetica-Bold', fontSize=8, textColor=DORADO)],
-                    [Spacer(1,3)],
-                    [p(alianza.get('descripcion',''), fontSize=8, textColor=TEXTO2, leading=13)],
-                    [Spacer(1,3)],
-                    [p('BENEFICIOS', fontSize=6, textColor=GRIS, fontName='Helvetica-Bold')],
-                    [p('  ·  '.join(['✓ '+b for b in alianza.get('beneficios',[])]), fontSize=7, textColor=DORADO, leading=13)],
-                    [Spacer(1,3)],
-                    [p('📞  Contactar a Orlando: wa.link/33ogyz', fontName='Helvetica-Bold', fontSize=8, textColor=DORADO3 if False else DORADO)],
-                  ], colWidths=[ANCHO])
+            [Spacer(1,3)],
+            [p('BENEFICIOS', fontSize=6, textColor=GRIS, fontName='Helvetica-Bold')],
+            [p('  ·  '.join(['✓ '+b for b in alianza.get('beneficios',[])]), fontSize=7, textColor=DORADO, leading=13)],
+            [Spacer(1,3)],
+            [p('📞  Contactar a Orlando: wa.link/33ogyz', fontName='Helvetica-Bold', fontSize=8, textColor=DORADO)],
+        ], colWidths=[ANCHO])
         at.setStyle(TableStyle([
             ('BACKGROUND',(0,0),(-1,-1),NEGRO2),
             ('TOPPADDING',(0,0),(-1,-1),3),('BOTTOMPADDING',(0,0),(-1,-1),3),
@@ -351,7 +499,6 @@ def generar_pdf(data):
         ]))
         story.append(at)
 
-        # Casos de éxito
         casos = alianza.get('casosExito', [])
         if casos:
             story.append(Spacer(1,3*mm))
@@ -380,9 +527,7 @@ def generar_pdf(data):
     story.append(Spacer(1, 7*mm))
 
     # ── PLAN DE ACCIÓN ──
-    t, ts = seccion('PLAN DE ACCIÓN PRIORITARIO')
-    t.setStyle(ts)
-    story.append(t)
+    story.append(seccion('PLAN DE ACCIÓN PRIORITARIO'))
     story.append(Spacer(1, 3*mm))
 
     fases = [
@@ -401,14 +546,13 @@ def generar_pdf(data):
         ] + [[ip] for ip in items_p]
 
         ft = Table(contenido, colWidths=[ANCHO/3 - 5*mm])
-        ft_style = [
+        ft.setStyle(TableStyle([
             ('BACKGROUND',(0,0),(-1,2),col),
             ('BACKGROUND',(0,3),(-1,-1),NEGRO2),
             ('TOPPADDING',(0,0),(-1,-1),4),('BOTTOMPADDING',(0,0),(-1,-1),4),
             ('LEFTPADDING',(0,0),(-1,-1),8),('RIGHTPADDING',(0,0),(-1,-1),8),
             ('LINEBELOW',(0,2),(-1,2),2,NEGRO3),
-        ]
-        ft.setStyle(TableStyle(ft_style))
+        ]))
         fase_celdas.append(ft)
 
     plan_t = Table([fase_celdas], colWidths=[ANCHO/3]*3)
@@ -436,9 +580,3 @@ def generar_pdf(data):
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 7360))
     app.run(host='0.0.0.0', port=port, debug=False)
-
-
-if __name__ == '__main__':
-    import os
-    port = int(os.environ.get('PORT', 8080))
-    app.run(host='0.0.0.0', port=port)
