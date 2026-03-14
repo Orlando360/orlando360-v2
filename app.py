@@ -51,8 +51,8 @@ def save_audit(empresa, sector, url, resultado, ip):
         conn.commit()
         cur.close()
         conn.close()
-    except Exception:
-        pass
+    except Exception as e:
+        print(f'SUPABASE ERROR: {e}', flush=True)
 
 def sc(s):
     if s>=70: return VERDE
