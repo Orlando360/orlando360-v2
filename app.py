@@ -37,21 +37,29 @@ TEXTO2  = colors.HexColor('#AAAAAA')
 
 def save_audit(empresa, sector, url, resultado, ip):
     try:
-        db_url = os.environ.get('DATABASE_URL', '')
-        if not db_url:
+        supabase_url = os.environ.get('SUPABASE_URL', '')
+        supabase_key = os.environ.get('SUPABASE_KEY', '')
+        if not supabase_url or not supabase_key:
             return
-        conn = psycopg2.connect(db_url)
-        cur = conn.cursor()
-        cur.execute(
-            """INSERT INTO auditorias (empresa, sector, url, resultado_json, ip_usuario)
-               VALUES (%s, %s, %s, %s, %s)""",
-            (empresa, sector, url, json.dumps(resultado), ip)
+        requests.post(
+            f'{supabase_url}/rest/v1/auditorias',
+            headers={
+                'apikey': supabase_key,
+                'Authorization': f'Bearer {supabase_key}',
+                'Content-Type': 'application/json',
+                'Prefer': 'return=minimal'
+            },
+            json={
+                'empresa': empresa,
+                'sector': sector,
+                'url': url,
+                'resultado_json': resultado,
+                'ip_usuario': ip
+            },
+            timeout=5
         )
-        conn.commit()
-        cur.close()
-        conn.close()
-    except Exception as e:
-        print(f'SUPABASE ERROR: {e}', flush=True)
+    except Exception:
+        pass
 
 def sc(s):
     if s>=70: return VERDE
