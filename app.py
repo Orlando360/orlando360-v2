@@ -52,121 +52,71 @@ def semaforo_color(sem):
 #  SCRAPER REAL — extrae datos de la URL del cliente
 # ═══════════════════════════════════════════════════
 def scrape_url(url):
-    """
-    Intenta scrapear la URL y devuelve un dict con los datos extraídos.
-    Si falla (bloqueo, timeout, error), devuelve el motivo explícitamente
-    para que Claude lo comunique en el análisis en lugar de inventar datos.
-    """
     if not url or not url.startswith('http'):
-        return {'ok': False, 'razon': 'URL no proporcionada o inválida.'}
-
-    headers = {
-        'User-Agent': (
-            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) '
-            'AppleWebKit/537.36 (KHTML, like Gecko) '
-            'Chrome/120.0.0.0 Safari/537.36'
-        ),
-        'Accept-Language': 'es-CO,es;q=0.9,en;q=0.8',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-    }
-
+        return {'ok': False, 'razon': 'URL no valida.'}
+    headers = {'User-Agent': 'Mozilla/5.0 Chrome/120.0.0.0 Safari/537.36'}
     try:
         resp = requests.get(url, headers=headers, timeout=12, allow_redirects=True)
         resp.raise_for_status()
-    except requests.exceptions.Timeout:
-        return {'ok': False, 'razon': f'La URL tardó más de 12 segundos en responder: {url}'}
-    except requests.exceptions.ConnectionError:
-        return {'ok': False, 'razon': f'No se pudo conectar a: {url}'}
-    except requests.exceptions.HTTPError as e:
-        return {'ok': False, 'razon': f'El sitio devolvió error HTTP {e.response.status_code}: {url}'}
     except Exception as e:
-        return {'ok': False, 'razon': f'Error inesperado al acceder a {url}: {str(e)}'}
-
-    soup = BeautifulSoup(resp.text, 'html.parser')
-
-    # Título y meta descripción
-    title = soup.title.string.strip() if soup.title and soup.title.string else ''
-    meta_desc = ''
-    meta_kw   = ''
-    og_title  = ''
-    og_desc   = ''
-
-    for tag in soup.find_all('meta'):
-        name    = (tag.get('name') or '').lower()
-        prop    = (tag.get('property') or '').lower()
-        content = tag.get('content') or ''
-        if name == 'description':
-            meta_desc = content[:300]
-        elif name == 'keywords':
-            meta_kw = content[:200]
-        elif prop == 'og:title':
-            og_title = content[:150]
-        elif prop == 'og:description':
-            og_desc = content[:300]
-
-    # Headings
-    h1s = [h.get_text(strip=True) for h in soup.find_all('h1')][:5]
-    h2s = [h.get_text(strip=True) for h in soup.find_all('h2')][:8]
-
-    # Links internos vs externos
-    all_links = soup.find_all('a', href=True)
-    internal_links = [a['href'] for a in all_links if url.split('/')[2] in a['href'] or a['href'].startswith('/')]
-    external_links = [a['href'] for a in all_links if a['href'].startswith('http') and url.split('/')[2] not in a['href']]
-
-    # Imágenes sin alt
-    imgs = soup.find_all('img')
-    imgs_sin_alt = sum(1 for i in imgs if not i.get('alt'))
-
-    # Texto visible (primeros 1500 chars para no inflar el prompt)
-    for tag in soup(['script', 'style', 'noscript', 'header', 'footer', 'nav']):
-        tag.decompose()
-    texto_visible = ' '.join(soup.get_text(separator=' ').split())[:1500]
-
-    # Redes sociales detectadas en links
-    redes = []
-    redes_keywords = ['instagram', 'facebook', 'tiktok', 'youtube', 'twitter', 'linkedin', 'pinterest']
-    for lnk in [a['href'] for a in all_links]:
-        for red in redes_keywords:
-            if red in lnk.lower() and red not in redes:
-                redes.append(red)
-
-    # WhatsApp / CTA de contacto
-    tiene_whatsapp = any('whatsapp' in (a.get('href') or '').lower() or 'wa.me' in (a.get('href') or '') for a in all_links)
-    tiene_tel      = any('tel:' in (a.get('href') or '') for a in all_links)
-    tiene_email    = any('mailto:' in (a.get('href') or '') for a in all_links)
-
-    # HTTPS
-    es_https = url.startswith('https://')
-
-    # Tiempo de carga (aproximado por tamaño de respuesta)
-    tam_kb = round(len(resp.content) / 1024, 1)
-
-    return {
-        'ok': True,
-        'url': url,
-        'titulo': title,
-        'meta_descripcion': meta_desc,
-        'meta_keywords': meta_kw,
-        'og_title': og_title,
-        'og_descripcion': og_desc,
-        'h1': h1s,
-        'h2': h2s,
-        'total_links': len(all_links),
-        'links_internos': len(internal_links),
-        'links_externos': len(external_links),
-        'total_imagenes': len(imgs),
-        'imagenes_sin_alt': imgs_sin_alt,
-        'redes_sociales_detectadas': redes,
-        'tiene_whatsapp': tiene_whatsapp,
-        'tiene_tel': tiene_tel,
-        'tiene_email': tiene_email,
-        'es_https': es_https,
-        'tamano_pagina_kb': tam_kb,
-        'texto_visible_muestra': texto_visible,
-    }
+        return {'ok': False, 'razon': f'Error de red: {str(e)}'}
+    try:
+        soup = BeautifulSoup(resp.text, 'html.parser')
+        title = str(soup.title.string).strip() if soup.title and soup.title.string else ''
+        meta_desc = meta_kw = og_title = og_desc = ''
+        for tag in soup.find_all('meta'):
+            try:
+                n = str(tag.get('name') or '').lower()
+                p = str(tag.get('property') or '').lower()
+                c = str(tag.get('content') or '')
+                if n == 'description': meta_desc = c[:300]
+                elif n == 'keywords': meta_kw = c[:200]
+                elif p == 'og:title': og_title = c[:150]
+                elif p == 'og:description': og_desc = c[:300]
+            except Exception: continue
+        h1s = [h.get_text(strip=True) for h in soup.find_all('h1')][:5]
+        h2s = [h.get_text(strip=True) for h in soup.find_all('h2')][:8]
+        dominio = url.split('/')[2] if len(url.split('/')) > 2 else ''
+        all_links = []
+        for a in soup.find_all('a'):
+            try:
+                h = a.get('href')
+                if h and isinstance(h, str): all_links.append(h)
+            except Exception: continue
+        internal_links = [h for h in all_links if h.startswith('/') or dominio in h]
+        external_links = [h for h in all_links if h.startswith('http') and dominio not in h]
+        imgs = soup.find_all('img')
+        imgs_sin_alt = sum(1 for i in imgs if not i.get('alt'))
+        for tag in soup(['script','style','noscript','header','footer','nav']):
+            try: tag.decompose()
+            except Exception: pass
+        texto_visible = ' '.join(soup.get_text(separator=' ').split())[:1500]
+        redes = []
+        for h in all_links:
+            for red in ['instagram','facebook','tiktok','youtube','twitter','linkedin','pinterest']:
+                if red in h.lower() and red not in redes: redes.append(red)
+        return {
+            'ok': True, 'url': url, 'titulo': title,
+            'meta_descripcion': meta_desc, 'meta_keywords': meta_kw,
+            'og_title': og_title, 'og_descripcion': og_desc,
+            'h1': h1s, 'h2': h2s,
+            'total_links': len(all_links),
+            'links_internos': len(internal_links),
+            'links_externos': len(external_links),
+            'total_imagenes': len(imgs),
+            'imagenes_sin_alt': imgs_sin_alt,
+            'redes_sociales_detectadas': redes,
+            'tiene_whatsapp': any('whatsapp' in h.lower() or 'wa.me' in h for h in all_links),
+            'tiene_tel': any('tel:' in h for h in all_links),
+            'tiene_email': any('mailto:' in h for h in all_links),
+            'es_https': url.startswith('https://'),
+            'tamano_pagina_kb': round(len(resp.content)/1024, 1),
+            'texto_visible_muestra': texto_visible,
+        }
+    except Exception as e:
+        return {'ok': False, 'razon': f'Error al procesar: {str(e)}'}
 
 
-# ═══ RUTAS ═══
 @app.route('/')
 def index():
     return send_from_directory('public', 'index.html')
