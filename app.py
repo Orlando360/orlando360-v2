@@ -125,7 +125,9 @@ def scrape_url(url):
     # Redes sociales detectadas en links
     redes = []
     redes_keywords = ['instagram', 'facebook', 'tiktok', 'youtube', 'twitter', 'linkedin', 'pinterest']
-    for lnk in [a['href'] for a in all_links]:
+    for a in all_links:
+        lnk = a.get('href') or ''
+        if not isinstance(lnk, str): continue
         for red in redes_keywords:
             if red in lnk.lower() and red not in redes:
                 redes.append(red)
