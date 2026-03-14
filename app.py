@@ -109,7 +109,7 @@ def scrape_url(url):
     h2s = [h.get_text(strip=True) for h in soup.find_all('h2')][:8]
 
     # Links internos vs externos
-    all_links = [a for a in soup.find_all('a') if a.get('href')]
+    all_links = soup.find_all('a', href=True)
     internal_links = [a['href'] for a in all_links if url.split('/')[2] in a['href'] or a['href'].startswith('/')]
     external_links = [a['href'] for a in all_links if a['href'].startswith('http') and url.split('/')[2] not in a['href']]
 
