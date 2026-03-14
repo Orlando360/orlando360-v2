@@ -109,9 +109,13 @@ def scrape_url(url):
     h2s = [h.get_text(strip=True) for h in soup.find_all('h2')][:8]
 
     # Links internos vs externos
-    all_links = soup.find_all('a', href=True)
-    internal_links = [a['href'] for a in all_links if url.split('/')[2] in a['href'] or a['href'].startswith('/')]
-    external_links = [a['href'] for a in all_links if a['href'].startswith('http') and url.split('/')[2] not in a['href']]
+    def safe_href(tag):
+        h = tag.get('href')
+        return h if h and isinstance(h, str) else None
+    all_links = [a for a in soup.find_all('a') if safe_href(a)]
+    dominio = url.split('/')[2] if len(url.split('/')) > 2 else ''
+    internal_links = [safe_href(a) for a in all_links if safe_href(a).startswith('/') or dominio in safe_href(a)]
+    external_links = [safe_href(a) for a in all_links if safe_href(a).startswith('http') and dominio not in safe_href(a)]
 
     # Imágenes sin alt
     imgs = soup.find_all('img')
