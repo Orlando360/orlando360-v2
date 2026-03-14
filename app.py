@@ -1,4 +1,6 @@
 from flask import Flask, request, jsonify, send_file, send_from_directory
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 import anthropic, json, os, re, io, requests
 from bs4 import BeautifulSoup
 from datetime import datetime
@@ -16,6 +18,7 @@ from reportlab.graphics import renderPDF
 
 app = Flask(__name__, static_folder='public', static_url_path='')
 API_KEY = os.environ.get('ANTHROPIC_API_KEY', '')
+limiter = Limiter(get_remote_address, app=app, default_limits=[], on_breach=lambda limit: (jsonify({'error': 'Rate limit exceeded. Please try again later.'}), 429))
 
 # ═══ COLORES ═══
 NEGRO   = colors.HexColor('#0A0A0A')
@@ -123,6 +126,7 @@ def index():
 
 
 @app.route('/api/auditoria', methods=['POST'])
+@limiter.limit('10 per hour')
 def auditoria():
     if not API_KEY:
         return jsonify({'error': 'API key no configurada'}), 500
@@ -198,6 +202,7 @@ y por qué, para que el cliente sepa que el análisis de ese pilar es inferido, 
 
 
 @app.route('/api/pdf', methods=['POST'])
+@limiter.limit('20 per hour')
 def pdf():
     data = request.json
     if not data:
