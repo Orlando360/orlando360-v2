@@ -52,130 +52,93 @@ def semaforo_color(sem):
 #  SCRAPER REAL — extrae datos de la URL del cliente
 # ═══════════════════════════════════════════════════
 def scrape_url(url):
-    """
-    Intenta scrapear la URL y devuelve un dict con los datos extraídos.
-    Si falla (bloqueo, timeout, error), devuelve el motivo explícitamente
-    para que Claude lo comunique en el análisis en lugar de inventar datos.
-    """
-    if not url or not url.startswith('http'):
-        return {'ok': False, 'razon': 'URL no proporcionada o inválida.'}
-
-    headers = {
-        'User-Agent': (
-            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) '
-            'AppleWebKit/537.36 (KHTML, like Gecko) '
-            'Chrome/120.0.0.0 Safari/537.36'
-        ),
-        'Accept-Language': 'es-CO,es;q=0.9,en;q=0.8',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-    }
-
+    if not url or not url.startswith("http"):
+        return {"ok": False, "razon": "URL no valida."}
+    headers = {"User-Agent": "Mozilla/5.0 Chrome/120.0.0.0 Safari/537.36"}
     try:
         resp = requests.get(url, headers=headers, timeout=12, allow_redirects=True)
         resp.raise_for_status()
-    except requests.exceptions.Timeout:
-        return {'ok': False, 'razon': f'La URL tardó más de 12 segundos en responder: {url}'}
-    except requests.exceptions.ConnectionError:
-        return {'ok': False, 'razon': f'No se pudo conectar a: {url}'}
-    except requests.exceptions.HTTPError as e:
-        return {'ok': False, 'razon': f'El sitio devolvió error HTTP {e.response.status_code}: {url}'}
     except Exception as e:
-        return {'ok': False, 'razon': f'Error inesperado al acceder a {url}: {str(e)}'}
-
-    soup = BeautifulSoup(resp.text, 'html.parser')
-
-    # Título y meta descripción
-    title = soup.title.string.strip() if soup.title and soup.title.string else ''
-    meta_desc = ''
-    meta_kw   = ''
-    og_title  = ''
-    og_desc   = ''
-
-    for tag in soup.find_all('meta'):
-        name    = (tag.get('name') or '').lower()
-        prop    = (tag.get('property') or '').lower()
-        content = tag.get('content') or ''
-        if name == 'description':
-            meta_desc = content[:300]
-        elif name == 'keywords':
-            meta_kw = content[:200]
-        elif prop == 'og:title':
-            og_title = content[:150]
-        elif prop == 'og:description':
-            og_desc = content[:300]
-
-    # Headings
-    h1s = [h.get_text(strip=True) for h in soup.find_all('h1')][:5]
-    h2s = [h.get_text(strip=True) for h in soup.find_all('h2')][:8]
-
-    # Links internos vs externos
-    def safe_href(tag):
+        return {"ok": False, "razon": f"Error de red: {str(e)}"}
+    try:
+        from bs4 import Tag
+        soup = BeautifulSoup(resp.text, "html.parser")
+        title = ""
         try:
-            if tag is None: return None
-            attrs = getattr(tag, 'attrs', None)
-            if not isinstance(attrs, dict): return None
-            h = attrs.get('href', None)
-            return h if h and isinstance(h, str) else None
-        except Exception:
-            return None
-    all_links = [a for a in soup.find_all('a') if a is not None and safe_href(a)]
-    dominio = url.split('/')[2] if len(url.split('/')) > 2 else ''
-    internal_links = [safe_href(a) for a in all_links if safe_href(a).startswith('/') or dominio in safe_href(a)]
-    external_links = [safe_href(a) for a in all_links if safe_href(a).startswith('http') and dominio not in safe_href(a)]
-
-    # Imágenes sin alt
-    imgs = soup.find_all('img')
-    imgs_sin_alt = sum(1 for i in imgs if not i.get('alt'))
-
-    # Texto visible (primeros 1500 chars para no inflar el prompt)
-    for tag in soup(['script', 'style', 'noscript', 'header', 'footer', 'nav']):
-        tag.decompose()
-    texto_visible = ' '.join(soup.get_text(separator=' ').split())[:1500]
-
-    # Redes sociales detectadas en links
-    redes = []
-    redes_keywords = ['instagram', 'facebook', 'tiktok', 'youtube', 'twitter', 'linkedin', 'pinterest']
-    for h in [safe_href(a) for a in all_links if a is not None]:
-        if not h: continue
-        for red in redes_keywords:
-            if red in h.lower() and red not in redes:
-                redes.append(red)
-
-    # WhatsApp / CTA de contacto
-    _hrefs = [safe_href(a) or '' for a in all_links if a is not None]
-    tiene_whatsapp = any('whatsapp' in h.lower() or 'wa.me' in h for h in _hrefs)
-    tiene_tel      = any('tel:' in h for h in _hrefs)
-    tiene_email    = any('mailto:' in h for h in _hrefs)
-
-    # HTTPS
-    es_https = url.startswith('https://')
-
-    # Tiempo de carga (aproximado por tamaño de respuesta)
-    tam_kb = round(len(resp.content) / 1024, 1)
-
-    return {
-        'ok': True,
-        'url': url,
-        'titulo': title,
-        'meta_descripcion': meta_desc,
-        'meta_keywords': meta_kw,
-        'og_title': og_title,
-        'og_descripcion': og_desc,
-        'h1': h1s,
-        'h2': h2s,
-        'total_links': len(all_links),
-        'links_internos': len(internal_links),
-        'links_externos': len(external_links),
-        'total_imagenes': len(imgs),
-        'imagenes_sin_alt': imgs_sin_alt,
-        'redes_sociales_detectadas': redes,
-        'tiene_whatsapp': tiene_whatsapp,
-        'tiene_tel': tiene_tel,
-        'tiene_email': tiene_email,
-        'es_https': es_https,
-        'tamano_pagina_kb': tam_kb,
-        'texto_visible_muestra': texto_visible,
-    }
+            if soup.title and soup.title.string: title = str(soup.title.string).strip()
+        except Exception: pass
+        meta_desc = meta_kw = og_title = og_desc = ""
+        for tag in soup.find_all("meta"):
+            try:
+                if not isinstance(tag, Tag): continue
+                attrs = tag.attrs if isinstance(tag.attrs, dict) else {}
+                n = str(attrs.get("name") or "").lower()
+                prop = str(attrs.get("property") or "").lower()
+                c = str(attrs.get("content") or "")
+                if n == "description": meta_desc = c[:300]
+                elif n == "keywords": meta_kw = c[:200]
+                elif prop == "og:title": og_title = c[:150]
+                elif prop == "og:description": og_desc = c[:300]
+            except Exception: continue
+        h1s, h2s = [], []
+        for h in soup.find_all("h1")[:5]:
+            try:
+                if isinstance(h, Tag): h1s.append(h.get_text(strip=True))
+            except Exception: pass
+        for h in soup.find_all("h2")[:8]:
+            try:
+                if isinstance(h, Tag): h2s.append(h.get_text(strip=True))
+            except Exception: pass
+        dominio = url.split("/")[2] if len(url.split("/")) > 2 else ""
+        hrefs = []
+        for a in soup.find_all("a"):
+            try:
+                if not isinstance(a, Tag): continue
+                attrs = a.attrs if isinstance(a.attrs, dict) else {}
+                h = attrs.get("href", None)
+                if h and isinstance(h, str): hrefs.append(h.strip())
+            except Exception: continue
+        internal_links = [h for h in hrefs if h.startswith("/") or dominio in h]
+        external_links = [h for h in hrefs if h.startswith("http") and dominio not in h]
+        imgs_total = imgs_sin_alt = 0
+        for i in soup.find_all("img"):
+            try:
+                if not isinstance(i, Tag): continue
+                imgs_total += 1
+                attrs = i.attrs if isinstance(i.attrs, dict) else {}
+                if not attrs.get("alt"): imgs_sin_alt += 1
+            except Exception: pass
+        texto_visible = ""
+        try:
+            for tag in soup(["script","style","noscript","header","footer","nav"]):
+                try: tag.decompose()
+                except Exception: pass
+            texto_visible = " ".join(soup.get_text(separator=" ").split())[:1500]
+        except Exception: pass
+        redes = []
+        for h in hrefs:
+            for red in ["instagram","facebook","tiktok","youtube","twitter","linkedin","pinterest"]:
+                if red in h.lower() and red not in redes: redes.append(red)
+        return {
+            "ok": True, "url": url, "titulo": title,
+            "meta_descripcion": meta_desc, "meta_keywords": meta_kw,
+            "og_title": og_title, "og_descripcion": og_desc,
+            "h1": h1s, "h2": h2s,
+            "total_links": len(hrefs),
+            "links_internos": len(internal_links),
+            "links_externos": len(external_links),
+            "total_imagenes": imgs_total,
+            "imagenes_sin_alt": imgs_sin_alt,
+            "redes_sociales_detectadas": redes,
+            "tiene_whatsapp": any("whatsapp" in h.lower() or "wa.me" in h for h in hrefs),
+            "tiene_tel": any("tel:" in h for h in hrefs),
+            "tiene_email": any("mailto:" in h for h in hrefs),
+            "es_https": url.startswith("https://"),
+            "tamano_pagina_kb": round(len(resp.content)/1024, 1),
+            "texto_visible_muestra": texto_visible,
+        }
+    except Exception as e:
+        return {"ok": False, "razon": f"Error al procesar: {str(e)}"}
 
 
 # ═══ RUTAS ═══
