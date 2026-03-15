@@ -223,8 +223,10 @@ y por qué, para que el cliente sepa que el análisis de ese pilar es inferido, 
         return jsonify(resultado)
 
     except json.JSONDecodeError as e:
+        print(f'JSON ERROR: {e}', flush=True)
         return jsonify({'error': f'Error de parsing JSON: {e}'}), 500
     except Exception as e:
+        print(f'AUDITORIA ERROR: {type(e).__name__}: {e}', flush=True)
         return jsonify({'error': str(e)}), 500
 
 
