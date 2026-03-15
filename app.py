@@ -129,18 +129,17 @@ def scrape_url(url):
     # Redes sociales detectadas en links
     redes = []
     redes_keywords = ['instagram', 'facebook', 'tiktok', 'youtube', 'twitter', 'linkedin', 'pinterest']
-    for a in all_links:
-        if a is None: continue
-        lnk = a.get('href') or ''
-        if not isinstance(lnk, str): continue
+    for h in [safe_href(a) for a in all_links if a is not None]:
+        if not h: continue
         for red in redes_keywords:
-            if red in lnk.lower() and red not in redes:
+            if red in h.lower() and red not in redes:
                 redes.append(red)
 
     # WhatsApp / CTA de contacto
-    tiene_whatsapp = any('whatsapp' in (safe_href(a) or '').lower() or 'wa.me' in (safe_href(a) or '') for a in all_links)
-    tiene_tel      = any('tel:' in (safe_href(a) or '') for a in all_links)
-    tiene_email    = any('mailto:' in (safe_href(a) or '') for a in all_links)
+    _hrefs = [safe_href(a) or '' for a in all_links if a is not None]
+    tiene_whatsapp = any('whatsapp' in h.lower() or 'wa.me' in h for h in _hrefs)
+    tiene_tel      = any('tel:' in h for h in _hrefs)
+    tiene_email    = any('mailto:' in h for h in _hrefs)
 
     # HTTPS
     es_https = url.startswith('https://')
