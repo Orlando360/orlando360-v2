@@ -518,6 +518,12 @@ header{
         <div class="res-empresa-nombre" id="res-empresa">—</div>
         <div class="res-url" id="res-url">—</div>
         <div class="res-resumen" id="res-resumen"></div>
+        <div id="oportunidad-banner" style="display:none;margin-top:14px;padding:10px 16px;border-radius:8px;border-left:4px solid #F5C518;">
+          <div style="font-size:9px;letter-spacing:.15em;text-transform:uppercase;margin-bottom:4px;" id="op-label">OPORTUNIDAD COMERCIAL</div>
+          <div style="font-size:15px;font-weight:700;margin-bottom:4px;" id="op-nivel">—</div>
+          <div style="font-size:12px;line-height:1.6;" id="op-razon"></div>
+          <div style="font-size:11px;margin-top:6px;font-weight:600;" id="op-accion"></div>
+        </div>
       </div>
       <div class="score-orbe">
         <div class="score-orbe-num" id="res-score">—</div>
@@ -759,6 +765,21 @@ function mostrarResultado(data, url){
   document.getElementById('res-empresa').textContent = data.empresa||url;
   document.getElementById('res-url').textContent = url;
   document.getElementById('res-resumen').textContent = data.resumenEjecutivo||'';
+  // Banner oportunidad
+  if (data.oportunidad) {
+    const op = data.oportunidad;
+    const colores = {'ALTO':'#F5C518','MEDIO':'#F07C3A','BAJO':'#3DBA7A'};
+    const col = colores[op.nivel] || '#F5C518';
+    const banner = document.getElementById('oportunidad-banner');
+    banner.style.display = 'block';
+    banner.style.background = col + '18';
+    banner.style.borderColor = col;
+    document.getElementById('op-nivel').style.color = col;
+    document.getElementById('op-nivel').textContent = '● OPORTUNIDAD ' + (op.nivel||'');
+    document.getElementById('op-razon').textContent = op.razon||'';
+    document.getElementById('op-accion').textContent = '→ ' + (op.accion||'');
+    document.getElementById('op-accion').style.color = col;
+  }
   const scoreEl = document.getElementById('res-score');
   scoreEl.textContent = sg;
   scoreEl.className = 'score-orbe-num '+scoreClase(sg);
