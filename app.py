@@ -2,7 +2,6 @@ from flask import Flask, request, jsonify, send_file, send_from_directory
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 import anthropic, json, os, re, io, requests
-import psycopg2
 from bs4 import BeautifulSoup
 from datetime import datetime
 from reportlab.lib.pagesizes import A4
@@ -35,24 +34,6 @@ NARANJA = colors.HexColor('#F07C3A')
 ROJO    = colors.HexColor('#E84545')
 TEXTO   = colors.HexColor('#E0E0E0')
 TEXTO2  = colors.HexColor('#AAAAAA')
-
-def save_audit(empresa, sector, url, resultado, ip):
-    try:
-        db_url = os.environ.get('DATABASE_URL', '')
-        if not db_url:
-            return
-        conn = psycopg2.connect(db_url)
-        cur = conn.cursor()
-        cur.execute(
-            """INSERT INTO auditorias (empresa, sector, url, resultado_json, ip_usuario)
-               VALUES (%s, %s, %s, %s, %s)""",
-            (empresa, sector, url, json.dumps(resultado), ip)
-        )
-        conn.commit()
-        cur.close()
-        conn.close()
-    except Exception:
-        pass
 
 def sc(s):
     if s>=70: return VERDE
@@ -212,7 +193,6 @@ y por qué, para que el cliente sepa que el análisis de ese pilar es inferido, 
                 'seo':   p[2].get('score', 50),
             }
 
-        save_audit(empresa, sector, url, resultado, request.remote_addr)
         return jsonify(resultado)
 
     except json.JSONDecodeError as e:
