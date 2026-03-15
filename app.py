@@ -48,6 +48,32 @@ def semaforo_color(sem):
     return DORADO
 
 
+def save_audit(empresa, sector, url, resultado, ip):
+    try:
+        sb_url = os.environ.get('SUPABASE_URL', '')
+        sb_key = os.environ.get('SUPABASE_KEY', '')
+        if not sb_url or not sb_key:
+            return
+        requests.post(
+            f'{sb_url}/rest/v1/auditorias',
+            headers={
+                'apikey': sb_key,
+                'Authorization': f'Bearer {sb_key}',
+                'Content-Type': 'application/json',
+                'Prefer': 'return=minimal'
+            },
+            json={
+                'empresa': empresa,
+                'sector': sector,
+                'url': url,
+                'resultado_json': resultado,
+                'ip_usuario': ip
+            },
+            timeout=5
+        )
+    except Exception:
+        pass
+
 # ═══════════════════════════════════════════════════
 #  SCRAPER REAL — extrae datos de la URL del cliente
 # ═══════════════════════════════════════════════════
@@ -214,6 +240,7 @@ y por qué, para que el cliente sepa que el análisis de ese pilar es inferido, 
                 'seo':   p[2].get('score', 50),
             }
 
+        save_audit(empresa, sector, url, resultado, request.remote_addr)
         return jsonify(resultado)
 
     except json.JSONDecodeError as e:
