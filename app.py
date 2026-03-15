@@ -138,9 +138,9 @@ def scrape_url(url):
                 redes.append(red)
 
     # WhatsApp / CTA de contacto
-    tiene_whatsapp = any('whatsapp' in (a.get('href') or '').lower() or 'wa.me' in (a.get('href') or '') for a in all_links)
-    tiene_tel      = any('tel:' in (a.get('href') or '') for a in all_links)
-    tiene_email    = any('mailto:' in (a.get('href') or '') for a in all_links)
+    tiene_whatsapp = any('whatsapp' in (safe_href(a) or '').lower() or 'wa.me' in (safe_href(a) or '') for a in all_links)
+    tiene_tel      = any('tel:' in (safe_href(a) or '') for a in all_links)
+    tiene_email    = any('mailto:' in (safe_href(a) or '') for a in all_links)
 
     # HTTPS
     es_https = url.startswith('https://')
