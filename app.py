@@ -130,6 +130,7 @@ def scrape_url(url):
     redes = []
     redes_keywords = ['instagram', 'facebook', 'tiktok', 'youtube', 'twitter', 'linkedin', 'pinterest']
     for a in all_links:
+        if a is None: continue
         lnk = a.get('href') or ''
         if not isinstance(lnk, str): continue
         for red in redes_keywords:
