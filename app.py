@@ -110,8 +110,14 @@ def scrape_url(url):
 
     # Links internos vs externos
     def safe_href(tag):
-        h = tag.get('href')
-        return h if h and isinstance(h, str) else None
+        try:
+            if tag is None: return None
+            attrs = getattr(tag, 'attrs', None)
+            if not isinstance(attrs, dict): return None
+            h = attrs.get('href', None)
+            return h if h and isinstance(h, str) else None
+        except Exception:
+            return None
     all_links = [a for a in soup.find_all('a') if a is not None and safe_href(a)]
     dominio = url.split('/')[2] if len(url.split('/')) > 2 else ''
     internal_links = [safe_href(a) for a in all_links if safe_href(a).startswith('/') or dominio in safe_href(a)]
