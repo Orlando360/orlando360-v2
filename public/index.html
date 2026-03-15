@@ -781,29 +781,30 @@ function mostrarResultado(data, url){
     document.getElementById('op-accion').style.color = col;
   }
   const scoreEl = document.getElementById('res-score');
-  scoreEl.textContent = sg;
   scoreEl.className = 'score-orbe-num '+scoreClase(sg);
   const nivelEl = document.getElementById('res-nivel');
   nivelEl.textContent = scoreNivel(sg);
   nivelEl.style.color = scoreColor(sg);
   nivelEl.style.borderColor = scoreColor(sg);
+  let _c=0; const _iv=setInterval(()=>{ _c=Math.min(_c+1,sg); scoreEl.textContent=_c; if(_c>=sg)clearInterval(_iv); },18);
 
   // Pilares
   const pg = document.getElementById('pilares-grid');
-  pg.innerHTML = (data.pilares||[]).map(p=>{
+  pg.innerHTML = (data.pilares||[]).map((p,idx)=>{
     const sem = p.semaforo==='verde'?'#3DBA7A': p.semaforo==='rojo'?'#E84545':'#F5C518';
     return `<div class="pilar-card">
       <div class="pilar-header">
         <span class="pilar-nombre">${p.nombre}</span>
         <span class="pilar-score" style="color:${sem}">${p.score}</span>
       </div>
-      <div class="pilar-barra-bg"><div class="pilar-barra-fill" style="width:${p.score}%;background:${sem}"></div></div>
+      <div class="pilar-barra-bg"><div class="pilar-barra-fill" style="width:0%;background:${sem};transition:width 0.9s ease ${idx*0.1}s" data-w="${p.score}"></div></div>
       <p class="pilar-hallazgo">${p.hallazgo||''}</p>
       <p class="pilar-accion">→ ${p.accion||''}</p>
     </div>`;
   }).join('');
 
   // Competencia
+  setTimeout(()=>{ document.querySelectorAll('.pilar-barra-fill').forEach(b=>{ b.style.width=b.dataset.w+'%'; }); },100);
   const cg = document.getElementById('comp-grid');
   cg.innerHTML = (data.competidores||[]).map((c,i)=>{
     const destacado = i===2 ? 'destacado' : '';
@@ -1035,5 +1036,9 @@ function fmtFecha(iso){
 }
 function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
 </script>
+  <a href="https://wa.link/33ogyz" target="_blank" style="position:fixed;bottom:24px;right:24px;background:#F5C518;color:#0A0A0A;font-weight:700;font-size:13px;padding:12px 20px;border-radius:8px;text-decoration:none;display:flex;align-items:center;gap:8px;z-index:9999;box-shadow:0 4px 20px rgba(245,197,24,0.3);">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0A0A0A" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    Hablar con Orlando 360™
+  </a>
 </body>
 </html>
