@@ -1,5 +1,11 @@
 {
   "version": 2,
-  "builds": [{"src": "app.py", "use": "@vercel/python", "config": {"includeFiles": ["public/**"]}}],
-  "routes": [{"src": "/(.*)", "dest": "/app.py"}]
+  "builds": [
+    {"src": "app.py", "use": "@vercel/python"},
+    {"src": "public/index.html", "use": "@vercel/static"}
+  ],
+  "routes": [
+    {"src": "/api/(.*)", "dest": "/app.py"},
+    {"src": "/", "dest": "/public/index.html"}
+  ]
 }
