@@ -1,5 +1,5 @@
 {
   "version": 2,
-  "builds": [{"src": "app.py", "use": "@vercel/python"}],
+  "builds": [{"src": "app.py", "use": "@vercel/python", "config": {"includeFiles": ["public/**"]}}],
   "routes": [{"src": "/(.*)", "dest": "/app.py"}]
 }

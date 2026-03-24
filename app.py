@@ -14,7 +14,8 @@ from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
 from reportlab.graphics.shapes import Drawing, Rect
 from reportlab.graphics import renderPDF
 
-app = Flask(__name__, static_folder='public', static_url_path='')
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+app = Flask(__name__, static_folder=os.path.join(BASE_DIR, 'public'), static_url_path='')
 API_KEY = os.environ.get('ANTHROPIC_API_KEY', '')
 
 # ═══ COLORES ═══
@@ -170,7 +171,7 @@ def scrape_url(url):
 # ═══ RUTAS ═══
 @app.route('/')
 def index():
-    return send_from_directory('public', 'index.html')
+    return send_from_directory(os.path.join(BASE_DIR, 'public'), 'index.html')
 
 
 @app.route('/api/auditoria', methods=['POST'])
