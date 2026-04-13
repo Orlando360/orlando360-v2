@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify, send_file, send_from_directory
 import anthropic, json, os, re, io, requests
+from utils.anthropic_retry import call_anthropic_with_retry
 from bs4 import BeautifulSoup
 from datetime import datetime
 from reportlab.lib.pagesizes import A4
@@ -806,7 +807,8 @@ y por qué, para que el cliente sepa que el análisis de ese pilar es inferido, 
 
     try:
         client = anthropic.Anthropic(api_key=API_KEY)
-        msg = client.messages.create(
+        msg = call_anthropic_with_retry(
+            client,
             model='claude-sonnet-4-20250514',
             max_tokens=5000,
             messages=[{'role': 'user', 'content': prompt_final}]
